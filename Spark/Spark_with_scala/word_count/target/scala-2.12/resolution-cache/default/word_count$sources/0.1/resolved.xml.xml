@@ -4,7 +4,7 @@
 		module="word_count$sources"
 		revision="0.1"
 		status="integration"
-		publication="20190125142552"
+		publication="20190128123751"
 	/>
 	<configurations>
 		<conf name="compile" visibility="public" description=""/>
