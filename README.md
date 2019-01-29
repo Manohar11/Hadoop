@@ -14,9 +14,9 @@ Problem has been solved using both the DataFrame native and Spark SQL approaches
 
 i) Spark DataFrame Native approach: <a href='https://github.com/Manohar11/Hadoop/tree/master/Spark/Pyspark/DataFrame_native_API_solutions'> Solution using DataFrame Native API's </a>
 
-spark-submit --master yarn \
-  --deploy-mode client \
-  src/main/python/SaleProfit_US_states.py \
-  cluster
+Job execution:
+spark-submit --master yarn 
+--deploy-mode client 
+src/main/python/SaleProfit_US_states.py <<mode_as_per_properties>>
   
 i) Spark SQL approach: <a href=''> Updating........ Solution using Spark SQL </a>
