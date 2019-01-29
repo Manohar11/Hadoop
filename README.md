@@ -7,5 +7,16 @@ In this repository, will build the distributed processing applications using the
 
 #### Problem 1: Word Count:
 
+Refer to the link: <a href= 'https://github.com/Manohar11/Hadoop/tree/master/Spark/Pyspark/word_count'> Word count problem </a>
+
 #### Problem 2: Total profit per state in US using the SuperStoreUS dataset
-<a href='https://github.com/Manohar11/Hadoop/tree/master/Spark/Pyspark/DataFrame_native_API_solutions'> Using DataFrame Native API's approach </a>
+Problem has been solved using both the DataFrame native and Spark SQL approaches:
+
+i) Spark DataFrame Native approach: <a href='https://github.com/Manohar11/Hadoop/tree/master/Spark/Pyspark/DataFrame_native_API_solutions'> Solution using DataFrame Native API's </a>
+
+spark-submit --master yarn \
+  --deploy-mode client \
+  src/main/python/SaleProfit_US_states.py \
+  cluster
+  
+i) Spark SQL approach: <a href=''> Updating........ Solution using Spark SQL </a>
