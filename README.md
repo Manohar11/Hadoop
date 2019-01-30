@@ -7,7 +7,11 @@ In this repository, will build the distributed processing applications using the
 
 #### Problem 1: Word Count:
 
-Refer to the link: <a href= 'https://github.com/Manohar11/Hadoop/tree/master/Spark/Pyspark/word_count'> Word count problem </a>
+#### Using Python
+Refer to the link: <a href= 'https://github.com/Manohar11/Hadoop/blob/master/Spark/Pyspark/word_count/src/main/python/word_count.py'> Word count problem </a>
+
+#### Using Scala
+Refer to the link: <a href= 'https://github.com/Manohar11/Hadoop/blob/master/Spark/Spark_with_scala/word_count/src/main/scala/word_count.scala'> Word count problem </a>
 
 #### Problem 2: Total profit per state in US using the SuperStoreUS dataset
 Problem has been solved using both the DataFrame native and Spark SQL approaches:
