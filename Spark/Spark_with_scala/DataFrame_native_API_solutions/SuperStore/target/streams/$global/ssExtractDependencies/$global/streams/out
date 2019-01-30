@@ -1,0 +1,1 @@
+[error] sbt.librarymanagement.ResolveException: unresolved dependency: org.apache.spark#spark-sql_2.12;2.3.0: not found
