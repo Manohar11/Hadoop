@@ -18,20 +18,15 @@ Problem has been solved using both the DataFrame native and Spark SQL approaches
 
 #### Using Python
 i) Spark DataFrame Native approach: <a href='https://github.com/Manohar11/Hadoop/tree/master/Spark/Pyspark/DataFrame_native_API_solutions'> Solution using DataFrame Native API's </a>
-
-Job execution:
-spark-submit --master yarn 
---deploy-mode client 
-src/main/python/SaleProfit_US_states.py <<mode_as_per_properties>>
   
-i) Spark SQL approach: <a href=''> Updating........ Solution using Spark SQL </a>
+ii) Spark SQL approach: <a href='https://github.com/Manohar11/Hadoop/blob/master/Spark/Pyspark/DataFrame_Spark_SQL_solutions/SuperStoreUS_SQL/src/main/python/SaleProfit_US_states.py'> Solution using Spark SQL </a>
 
 #### Using Scala
 i) Spark DataFrame Native approach: 
 <a href='https://github.com/Manohar11/Hadoop/blob/master/Spark/Spark_with_scala/DataFrame_native_API_solutions/SuperStore/src/main/scala/SaleProfit_US_states.scala'> Solution using DataFrame Native API's </a>
 
 
-i) Spark SQL approach: <a href=''> Updating........ Solution using Spark SQL </a>
+ii) Spark SQL approach: <a href=''> Updating........ Solution using Spark SQL </a>
 
 
 
