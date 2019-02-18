@@ -4,7 +4,7 @@ Hadoop tools - Sqoop, Spark
 In this repository, will build the distributed processing applications using the major Big data tool i.e., Apache Spark.
 
 ## Apache Sqoop
-Refer to the link: <a href= 'https://github.com/Manohar11/Hadoop/blob/master/Sqoop/sqoop_scripts.txt'>
+Refer to the link: <a href= 'https://github.com/Manohar11/Hadoop/blob/master/Sqoop/sqoop_scripts.txt'> Sqoop scripts </a>
 
 ## Apache Spark
 
