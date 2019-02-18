@@ -1,0 +1,320 @@
+=========================================================================
+Apache Sqoop version 1.4.6 
+=========================================================================
+To start all the services on the cloudera virtual machine:
+
+sudo /home/cloudera/cloudera-manager --enterprise --force
+=========================================================================
+
+To view help on sqoop options:
+
+[cloudera@quickstart ~]$ sqoop help
+Warning: /usr/lib/sqoop/../accumulo does not exist! Accumulo imports will fail.
+Please set $ACCUMULO_HOME to the root of your Accumulo installation.
+19/02/16 08:51:49 INFO sqoop.Sqoop: Running Sqoop version: 1.4.6-cdh5.13.0
+usage: sqoop COMMAND [ARGS]
+
+Available commands:
+  codegen            Generate code to interact with database records
+  create-hive-table  Import a table definition into Hive
+  eval               Evaluate a SQL statement and display the results
+  export             Export an HDFS directory to a database table
+  help               List available commands
+  import             Import a table from a database to HDFS
+  import-all-tables  Import tables from a database to HDFS
+  import-mainframe   Import datasets from a mainframe server to HDFS
+  job                Work with saved jobs
+  list-databases     List available databases on a server
+  list-tables        List available tables in a database
+  merge              Merge results of incremental imports
+  metastore          Run a standalone Sqoop metastore
+  version            Display version information
+
+See 'sqoop help COMMAND' for information on a specific command.
+
+=========================================================================
+Apache Sqoop - list-databases, list-tables and eval
+=========================================================================
+To view help - sqoop list-databases --help
+
+list-databases:
+
+[cloudera@quickstart ~]$ sqoop list-databases \
+> --connect jdbc:mysql://quickstart.cloudera:3306/ \
+> --username root \
+> --password cloudera;
+
+To view help - sqoop list-tables --help
+
+list-tables:
+
+[cloudera@quickstart ~]$ sqoop list-tables \
+> --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+> --username root \
+> --password cloudera;
+
+To view help - sqoop eval --help
+
+eval:
+[cloudera@quickstart ~]$ sqoop eval \
+> --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+> --username root \
+> --password cloudera \
+> --query "select * from categories limit 10"
+
+=========================================================================
+Apache Sqoop - import-all-tables, import
+=========================================================================
+To view help - sqoop import-all-tables --help
+
+import-all-tables:
+
+
+============
+HDFS load
+============
+
+[cloudera@quickstart ~]$ sqoop import-all-tables \
+> --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+> --username root \
+> --password cloudera \
+> -m 6 \
+> --warehouse-dir /user/Mano/datasets/sqoop_load/import_all;
+
+
+============
+Hive load
+============
+
+[cloudera@quickstart ~]$ sqoop import-all-tables \
+--connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+--username root \
+--password cloudera \
+--hive-import \
+--create-hive-table \
+--hive-database retail_db \
+--num-mappers 6 \
+--warehouse-dir /user/hive/warehouse/retail_db.db;
+
+
+To view help - sqoop import --help
+
+import:
+
+============
+HDFS load
+============
+
+[cloudera@quickstart ~]$ sqoop import \
+> --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+> --username root \
+> --password cloudera \
+> --table orders \
+> --target-dir /user/Mano/datasets/sqoop_load/import/orders \
+> -m 6 ;
+
+Data load validation check:
+
+Validation on HDFS:
+
+[cloudera@quickstart ~]$ hadoop fs -cat /user/Mano/datasets/sqoop_load/import/orders/p*|wc -l 
+68883
+
+Validation on MySQL:
+
+[cloudera@quickstart ~]$ sqoop eval \
+> --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+> --username root \
+> --password cloudera \
+> --query "select count(*) from orders" ;
+
+============
+Hive load
+============
+
+[cloudera@quickstart ~]$ sqoop import \
+> --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+> --username root \
+> --password cloudera \
+> --hive-database retail_db \
+> --hive-import \
+> --hive-table customers_sqoop \
+> --create-hive-table \
+> --table customers \
+> --num-mappers 4;
+
+
+Data load validation check:
+
+Validation on HDFS:
+
+[cloudera@quickstart ~]$ hadoop fs -cat /user/hive/warehouse/retail_db.db/customers_sqoop/p*|wc -l 
+68883
+
+Validation on MySQL:
+
+[cloudera@quickstart ~]$ sqoop eval \
+> --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+> --username root \
+> --password cloudera \
+> --query "select count(*) from customers" ;
+
+other parameters to play with data import are -e or --query, --where, --columns, --split-by, -z or --compress, --compression-codec, 
+
+Output line arguments:
+--fields-terminated-by, --lines-terminated-by, --enclosed-by, --null-string and --null-non-string
+
+file formats:
+--as-textfile
+--as-avrodatafile
+--as-sequencefile
+--as-parquetfile
+
+=========================================================================
+Apache Sqoop - Incremental import
+=========================================================================
+Incremental import:
+--incremental <mode> - append or lastmodified
+--check-column <column>
+--last-value <value>
+
+import:
+
+============
+HDFS load
+============
+
+[cloudera@quickstart ~]$ sqoop import \
+--connect jdbc:mysql://quickstart.cloudera:3306/mytables \
+--username root \
+--password cloudera \
+--table employee \
+--split-by id \
+--incremental append \
+--check-column id \
+--last-value 1 \
+--target-dir /user/Mano/datasets/sqoop_load/import/employee;
+
+Approaches to capture the last value for incremental load:
+There are three approaches based on the exploration came across as of now,
+i) Sqoop job - Maintains the last-value on the metastore and handles it automatically.
+
+ii) Shell script - Fetch or determining the last value from Hive or HDFS by script way.
+Example:
+Hive:
+lastvalue = "hive -e 'select max(column) from table'"
+
+[cloudera@quickstart ~]$ sqoop import \
+--connect jdbc:mysql://quickstart.cloudera:3306/mytables \
+--username root \
+--password cloudera \
+--table employee \
+--split-by id \
+--incremental append \
+--check-column id \
+--last-value ${lastvalue} \
+--target-dir /user/Mano/datasets/sqoop_load/import/employee;
+
+iii) Oozie: 
+
+will be updated for query oozie action and incremental import action
+
+=========================================================================
+Apache Sqoop - export
+=========================================================================
+To view help - sqoop export --help
+
+export:
+
+============
+MySQL load
+============
+[cloudera@quickstart ~]$ sqoop export \
+> --connect jdbc:mysql://quickstart.cloudera:3306/mytables \
+> --username root \
+> --password cloudera \
+> --table employee \
+> --export-dir /user/Mano/datasets/sqoop_load/import/employee/ \
+> -m 4;
+
+=========================================================================
+Apache Sqoop - Incremental export
+=========================================================================
+--update-key <column>
+--update-mode <mode> - updateonly(defualt) and allowinsert
+
+============
+MySQL load
+============
+
+[cloudera@quickstart ~]$ sqoop export \
+--connect jdbc:mysql://quickstart.cloudera:3306/mytables \
+--username root \
+--password cloudera \
+--table employee \
+--export-dir /user/hive/warehouse/mytables.db/employee \
+--update-key id \
+--update-mode allowinsert \
+-m 4 \
+--input-fields-terminated-by '\0001' \
+--input-lines-terminated-by '\n';
+
+
+Input parsing arguments:
+Input arguments are based on the data which exist on the underlying file system,
+
+--input-fields-terminated-by , --input-lines-terminated-by, --input-null-string, --input-null-non-string, --input-enclosed-by, --input-escaped-by
+
+
+=========================================================================
+Apache Sqoop - Job
+=========================================================================
+
+To view help - sqoop job --help
+
+Sqoop job Commands:
+
+sqoop job --create <job-id>
+sqoop job --list 
+sqoop job --exec <job-id>
+sqoop job --show <job-id>
+
+============
+Import job
+============
+[cloudera@quickstart ~]$ sqoop job --create import_job \
+> -- import \
+> --connect jdbc:mysql://quickstart.cloudera:3306/mytables \
+> --username root \
+> --password cloudera \
+> --table employee \
+> --incremental append \
+> --check-column id \
+> --last-value 0 \
+> --target-dir /user/Mano/datasets/sqoop_load/incre_job \
+> --num-mappers 2;
+
+=========================================================================
+Apache Sqoop - Merge
+=========================================================================
+Purpose: <source official sqoop user guide>
+Sqoop merge:
+The merge tool allows you to combine two datasets where entries in one dataset should overwrite entries of an older dataset. For example, an incremental import run 
+in last-modified mode will generate multiple datasets in HDFS where successively newer data appears in each dataset. The merge tool will "flatten" two datasets into
+one, taking the newest available records for each primary key.
+
+To view help - sqoop merge --help
+
+============
+Merge - to avoid 
+redundancies over lastmodified incremental load
+============
+
+[cloudera@quickstart ~]$ sqoop merge \
+> --merge-key id \
+> --new-data <new_data_path> \
+> --onto <old_data_path> \
+> --target-dir <target_path> \
+> --class-name <class_name> \
+> --jar-file <jar-file>;
+
