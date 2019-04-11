@@ -1,0 +1,692 @@
+=============================================================================
+Apache Hive - Version 1.1.0
+=============================================================================
+Apache Hive: < Source: official Hive user guide>
+Hive is a data warehousing infrastructure based on Apache Hadoop. Hadoop provides massive scale out and fault tolerance capabilities for data storage and processing on commodity hardware.
+
+Hive is designed to enable easy data summarization, ad-hoc querying and analysis of large volumes of data.
+
+Note:
+Hive's SQL gives users multiple places to integrate their own functionality to do custom analysis, such as User Defined Functions (UDFs).  
+Hive is not designed for online transaction processing.
+
+
+Apache HiveServer2:
+HiveServer2 (HS2) is a server interface that enables remote clients to execute queries against Hive and retrieve the results (a more detailed intro here). The current implementation, based on Thrift RPC, is an improved version of HiveServer and supports multi-client concurrency and authentication
+
+Basically, Hadoop distributions supports two Hive clients:
+* Hive CLI - which connects directly to HDFS and the Hive Metastore, and can be used only on a host with access to those services.
+* Beeline - which connects to HiveServer2 and requires access to only one .jar file: hive-jdbc-<version>-standalone.jar.
+
+
+Lauch Hive:
+[cloudera@quickstart ~]$ hive
+
+Logging initialized using configuration in jar:file:/usr/lib/hive/lib/hive-common-1.1.0-cdh5.13.0.jar!/hive-log4j.properties
+WARNING: Hive CLI is deprecated and migration to Beeline is recommended.
+hive> 
+
+Run without lauching hive:
+[cloudera@quickstart ~]$ hive -e "show databases;"
+
+Run Hive script:
+[cloudera@quickstart ~]$ hive -f "script_name.hql;"
+
+============================================
+Hive DDL commands
+============================================
+
+====================
+Database:
+i)Create Database
+ii)Drop Database
+iii)Alter Database
+iv)Use Database
+v)Show Database
+====================
+
+i)Create Database:
+Syntax:
+
+CREATE (DATABASE|SCHEMA) [IF NOT EXISTS] database_name
+  [COMMENT database_comment]
+  [LOCATION hdfs_path]
+  [WITH DBPROPERTIES (property_name=property_value, ...)];
+
+hive> CREATE DATABASE IF NOT EXISTS Hive_database
+    > LOCATION '/user/Mano/hive_data'
+    > ;
+
+ii)Drop Database:
+Syntax:
+
+DROP (DATABASE|SCHEMA) [IF EXISTS] database_name [RESTRICT|CASCADE];
+
+hive> DROP DATABASE IF EXISTS Hive_database RESTRICT;
+
+iii)Alter Database:
+Syntax:
+
+ALTER (DATABASE|SCHEMA) database_name SET DBPROPERTIES (property_name=property_value, ...);   -- (Note: SCHEMA added in Hive 0.14.0)
+ 
+ALTER (DATABASE|SCHEMA) database_name SET OWNER [USER|ROLE] user_or_role;   -- (Note: Hive 0.13.0 and later; SCHEMA added in Hive 0.14.0)
+  
+ALTER (DATABASE|SCHEMA) database_name SET LOCATION hdfs_path; -- (Note: Hive 2.2.1, 2.4.0 and later)
+
+hive> ALTER DATABASE Hive_database SET DBPROPERTIES("name"="Hive_database")
+    > ;
+
+iv)Use Database:
+Syntax:
+
+USE database_name;
+
+hive> use Hive_database;
+
+v)Show databases:
+
+hive> show databases;
+
+
+====================
+TABLE:
+i)Create Table
+ii)Alter Table
+====================
+
+i)Create Table:
+Syntax:
+
+CREATE [TEMPORARY] [EXTERNAL] TABLE [IF NOT EXISTS] [db_name.]table_name
+  [(col_name data_type [COMMENT col_comment], ... [constraint_specification])]
+  [COMMENT table_comment]
+  [PARTITIONED BY (col_name data_type [COMMENT col_comment], ...)]
+  [CLUSTERED BY (col_name, col_name, ...) [SORTED BY (col_name [ASC|DESC], ...)] INTO num_buckets BUCKETS]
+  [SKEWED BY (col_name, col_name, ...)]
+     ON ((col_value, col_value, ...), (col_value, col_value, ...), ...)
+     [STORED AS DIRECTORIES]
+  [
+   [ROW FORMAT row_format] 
+   [STORED AS file_format]
+     | STORED BY 'storage.handler.class.name' [WITH SERDEPROPERTIES (...)]
+  ]
+  [LOCATION hdfs_path]
+  [TBLPROPERTIES (property_name=property_value, ...)]
+  [AS select_statement];
+
+=========================================================================================
+data_type
+  : primitive_type
+  | array_type
+  | map_type
+  | struct_type
+  | union_type
+ 
+primitive_type
+  : TINYINT
+  | SMALLINT
+  | INT
+  | BIGINT
+  | BOOLEAN
+  | FLOAT
+  | DOUBLE
+  | DOUBLE PRECISION -- (Note: Available in Hive 2.2.0 and later)
+  | STRING
+  | BINARY      -- (Note: Available in Hive 0.8.0 and later)
+  | TIMESTAMP   -- (Note: Available in Hive 0.8.0 and later)
+  | DECIMAL     -- (Note: Available in Hive 0.11.0 and later)
+  | DECIMAL(precision, scale)  -- (Note: Available in Hive 0.13.0 and later)
+  | DATE        -- (Note: Available in Hive 0.12.0 and later)
+  | VARCHAR     -- (Note: Available in Hive 0.12.0 and later)
+  | CHAR        -- (Note: Available in Hive 0.13.0 and later)
+ 
+array_type
+  : ARRAY < data_type >
+ 
+map_type
+  : MAP < primitive_type, data_type >
+ 
+struct_type
+  : STRUCT < col_name : data_type [COMMENT col_comment], ...>
+ 
+union_type
+   : UNIONTYPE < data_type, data_type, ... >  -- (Note: Available in Hive 0.7.0 and later)
+ 
+row_format
+  : DELIMITED [FIELDS TERMINATED BY char [ESCAPED BY char]] [COLLECTION ITEMS TERMINATED BY char]
+        [MAP KEYS TERMINATED BY char] [LINES TERMINATED BY char]
+        [NULL DEFINED AS char]   -- (Note: Available in Hive 0.13 and later)
+  | SERDE serde_name [WITH SERDEPROPERTIES (property_name=property_value, property_name=property_value, ...)]
+ 
+file_format:
+  : SEQUENCEFILE
+  | TEXTFILE    -- (Default, depending on hive.default.fileformat configuration)
+  | RCFILE      -- (Note: Available in Hive 0.6.0 and later)
+  | ORC         -- (Note: Available in Hive 0.11.0 and later)
+  | PARQUET     -- (Note: Available in Hive 0.13.0 and later)
+  | AVRO        -- (Note: Available in Hive 0.14.0 and later)
+  | JSONFILE    -- (Note: Available in Hive 4.0.0 and later)
+  | INPUTFORMAT input_format_classname OUTPUTFORMAT output_format_classname
+ 
+constraint_specification:
+  : [, PRIMARY KEY (col_name, ...) DISABLE NOVALIDATE ]
+    [, CONSTRAINT constraint_name FOREIGN KEY (col_name, ...) REFERENCES table_name(col_name, ...) DISABLE NOVALIDATE 
+	
+=========================================================================================
+
+Text file format:
+
+Managed table:
+hive> CREATE TABLE hive_database.orders_manged
+    > (
+    > order_id INT,
+    > order_date DATE,
+    > order_customer_id INT,
+    > order_status STRING
+    > )
+    > ROW FORMAT 
+    > DELIMITED FIELDS TERMINATED BY ','
+    > LINES TERMINATED BY '\n'
+    > STORED AS TEXTFILE 
+    > LOCATION '/user/Mano/datasets/sqoop_load/import/orders'
+    > ;
+	
+External Table:
+hive> CREATE EXTERNAL TABLE hive_database.orders_manged
+    > (
+    > order_id INT,
+    > order_date DATE,
+    > order_customer_id INT,
+    > order_status STRING
+    > )
+    > ROW FORMAT 
+    > DELIMITED FIELDS TERMINATED BY ','
+    > LINES TERMINATED BY '\n'
+    > STORED AS TEXTFILE 
+    > LOCATION '/user/Mano/datasets/sqoop_load/import/orders'
+    > ;
+
+
+Avro data file format:
+
+hive> CREATE EXTERNAL TABLE hive_database.orders
+    > ROW FORMAT 
+    > SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe'
+    > STORED AS avro
+    > LOCATION '/user/Mano/datasets/sqoop_load/import/avro_data/orders'
+    > TBLPROPERTIES("avro.schema.url" = "/user/Mano/datasets/sqoop_load/import/avro_data_schemas/orders.avsc")
+    > ;
+
+
+Hive PARTITIONS:
+Hive organizes tables into partitions. It is a way of dividing a table into related parts based on the values of partitioned columns such as date, city, and department. Using partition, it is easy to query a portion of the data.
+
+Note:
+Tables or partitions are sub-divided into buckets
+
+Types of Partitions:
+There are two types of partitions,
+* Static partition
+* Dynamic partition
+
+PARTITION TABLE:
+
+Raw data table:
+hive> select * from hive_database.orders;
+
+Partitioning is based on the year, month and day wise for each orders,
+Transformed table:[Optional]
+
+Transform hive date format to proceed further,
+
+CREATE TABLE hive_database.orders_trans
+(
+order_id INT,
+order_date STRING,
+order_customer_id INT, 
+order_status STRING
+);
+
+INSERT OVERWRITE TABLE hive_database.orders_trans
+select order_id, SUBSTR(from_unixtime(cast(substr(order_date, 1, 10) as BIGINT)), 1, 10) AS order_date, order_customer_id, order_status from orders;
+
+SELECT * FROM hive_database.orders_trans LIMIT 10;
+
+Partitioned table:
+CREATE TABLE hive_database.orders_part
+(
+order_id INT,
+order_date STRING,
+order_customer_id INT, 
+order_status STRING
+)
+PARTITIONED BY (year INT, month INT, day INT)
+;
+
+Enable dynamic partitions:
+set hive.exec.dynamic.partition = true;
+set hive.exec.dynamic.partition.mode = nonstrict;
+
+Partions size control for each node and cluster level:
+set hive.exec.max.dynamic.partitions.pernode = 1000;
+set hive.exec.max.dynamic.partitions = 1000000;
+
+
+INSERT OVERWRITE TABLE hive_database.orders_part
+PARTITION(year, month, day)
+SELECT order_id, order_date, order_customer_id, order_status, year(order_date), month(order_date), day(order_date) from hive_database.orders_trans;
+
+
+Hive Bucketing:
+Hive partition divides table into number of partitions and these partitions can be further subdivided into more manageable parts known as Buckets or Clusters. The Bucketing concept is based on Hash function, which depends on the type of the bucketing column.
+
+Note:
+With the help of Bucketing, data of table can be evenly distributed.
+Also called as sampling technique.
+
+By default bucketing feature is disabled in hive:
+
+To enable:
+set hive.enforce.bucketing= true;
+
+BUCKETING TABLE:
+Raw data table:
+hive> select * from hive_database.orders limit 10;
+
+Bucketing table is based on unique key or specified key.
+
+Transformed table:[Optional]
+
+Bucketed table:
+CREATE TABLE hive_database.orders_buck
+(
+order_id INT,
+order_date STRING,
+order_customer_id INT, 
+order_status STRING
+)
+CLUSTERED BY (order_id)
+INTO 3 BUCKETS
+;
+
+Enable Bucketing feature:
+set hive.enforce.bucketing= true;
+
+INSERT OVERWRITE TABLE hive_database.orders_buck
+SELECT * from hive_database.orders;
+
+ii)Alter Table:
+Alter Column:
+Allow users to change a column's name, data type, comment, or position, or an arbitrary combination of them
+
+Syntax:
+ALTER TABLE table_name [PARTITION partition_spec] CHANGE [COLUMN] col_old_name col_new_name column_type
+  [COMMENT col_comment] [FIRST|AFTER column_name] [CASCADE|RESTRICT];
+  
+Hive has no support for Indexing like any other RDMS, to overcome that problem, hive partitioning provides a better way.
+
+
+hive> ALTER TABLE hive_database.orders_manged CHANGE order_date order_date STRING AFTER order_id;
+
+
+Hive DML operations:
+(Inset, Update, Delete)
+Can be supported using transactional property with ORC file format and table should be bucketed,
+
+using TBLPROPERTIES("transactional" = "true") while creating table and hive manages internal with compaction algorithm.
+
+
+===========================================
+Hive Functions:
+There are 3 types of hive functions:
+* User Defined Functions(UDF) - substr(), size(), length - Each row returns the one value like row level transformations,
+* User Defined Aggregated Functions(UDAF) - sum(), count(), avg(), max(), min() - Entire column or group of values returns single value,
+* User Defined Tabular functions(UDTF) - explode(), json_tuple(), parse_url_tuple() - returns a table with multiple rows and columns
+===========================================
+Hive UDF  - for creating custom business logic
+===========================================
+Steps for creating User Defined Functions (UDF):
+* Create java class - Must extend UDF and override evaluate method
+* Build jar
+* Register jar in hive - add jar test.jar
+* Create temporary function - create temporary function test as 'package.class_name';
+* Call the function
+
+Advantages of UDF's:
+Custom business logic implementation
+Re-usability of function
+
+
+========================================================================================
+Hive XML Data Processing
+========================================================================================
+Steps to process the XML file in hive:
+* Convert the xml from vertical to horizontal for each parent tag
+* Load the xml transition data to Hive stag table 
+* Load into processing table using xpath
+
+
+====================
+Sample simple XML data
+====================
+<person>
+<name>Manohar</name>
+<age>25</age>
+</person>
+<person>
+<name>Madhan</name>
+<age>13</age>
+</person>
+
+=========================================
+Using Spark for Converting XML from vertical to horizontal 
+=========================================
+val rdd1 = sc.textFile("/user/Mano/datasets/hive/xml/sample_xml.xml").map(x => x.trim())
+val rdd2 = sc.parallelize(Array(rdd1.collect().mkString(""))).map(x => x.split("</person>")).map(x => (x+"</person>"))
+rdd2.saveAsTextFile("/user/Mano/datasets/hive/xml_processed/sample_xml")
+
+Note:
+Number of executors = Number of files in the output of Spark
+
+=========================================
+Load the xml transition data to Hive stage table
+=========================================
+hive> CREATE EXTERNAL TABLE xml_stage.person_stage
+    > (
+    > line STRING
+    > )
+    > LOCATION "/user/Mano/datasets/hive/xml_processed/sample_xml/"
+    > ;
+
+=========================================
+Load into processing table using xpath
+=========================================
+hive> CREATE TABLE xml_ods.person_ods
+    > (
+    > name STRING,
+    > age INT
+    > )
+    > ROW FORMAT
+    > DELIMITED FIELDS TERMINATED BY ","
+    > LINES TERMINATED BY "\n"
+    > ;
+
+
+hive> INSERT OVERWRITE TABLE xml_ods.person_ods
+    > SELECT xpath_string(line, "person/name"),
+    > xpath_int(line, "person/age")
+    > FROM xml_stage.person_stage;
+
+
+Select * from xml_ods.person_ods;
+
+Note:
+Returns empty space for missing string fields and 0 for missing numerical fields
+
+
+========================================================================================
+JSON Data processing
+========================================================================================
+Steps to process the JSON file in hive:
+* Convert the JSON from vertical to horizontal for each parent tag
+* Load the JSON transition data to Hive stag table 
+* Load into processing table using get_json_object and json_tuple
+
+Two functions to extract JSON fields:
+* get_json_object - UDF function - for particular field
+* json_tuple - UDTF function - for continuous sequence of fields
+
+Note:
+Returns empty space for missing string fields and 0 for missing numerical fields
+
+====================
+Sample simple JSON data
+====================
+
+{
+"name":"Manohar",
+"age":25,
+"designation": {
+		"start":"Software programmer",
+		"now": "Data engineer"
+	       },
+"city":"Chennai"
+}
+{
+"name":"Test",
+"age":20,
+"designation": {
+		"start":"Data analyst",
+		"now": "Data engineer"
+	       },
+"city":"Hyderbad"
+}
+
+
+=========================================
+Using Spark for Converting JSON from vertical to horizontal 
+=========================================
+Will update the code
+
+
+=========================================
+Load the JSON transition data to Hive stage table
+=========================================
+
+CREATE EXTERNAL TABLE json_stage.person_stage
+(
+line STRING
+)
+LOCATION "/user/Mano/datasets/hive/json_processed/sample_json/"
+;
+
+
+=========================================
+Load into processing table using get_json_object and json_tuple
+=========================================
+
+CREATE DATABASE json_ods;
+
+CREATE TABLE json_ods.person_ods
+(
+name STRING,
+age INT,
+designation STRING,
+city STRING
+)
+ROW FORMAT
+DELIMITED FIELDS TERMINATED BY ","
+LINES TERMINATED BY "\n"
+;
+
+Using get_json_obect function
+==============================
+INSERT OVERWRITE TABLE json_ods.person_ods
+SELECT get_json_object(line, "$.name"),
+get_json_object(line, "$.age"),
+get_json_object(line, "$.designation"),
+get_json_object(line, "$.city")
+FROM json_stage.person_stage;
+
+
+Select * from json_ods.person_ods;
+
+
+Using json_tuple() function
+=============================
+
+CREATE TABLE json_ods.person_ods_type2
+(
+name STRING,
+age INT,
+designation STRING,
+city STRING
+)
+ROW FORMAT
+DELIMITED FIELDS TERMINATED BY ","
+LINES TERMINATED BY "\n"
+;
+
+INSERT OVERWRITE TABLE json_ods.person_ods_type2
+SELECT all.*
+FROM json_stage.person_stage
+LATERAL VIEW json_tuple(line, "name","age","designation","city") all as name, age, designation, city
+;
+
+
+Select * from json_ods.person_ods_type2;
+
+
+========================================================================================
+URL Data processing
+========================================================================================
+Steps to process the URL's in hive:
+* Load the URL'sdata to Hive stag table 
+* Load into processing table using parse_url and parse_url_tuple
+
+Two functions to extract URL fields(HOST, PATH and QUERY):
+* parse_url - UDF function - for particular field
+* parse_url_tuple - UDTF function - for continuous sequence of fields
+
+====================
+Sample simple URL's data
+====================
+
+https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwjevaCFhdngAhXCuo8KHbz7BX0QPAgH
+https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwjevaCFhdngAhXCuo8KHbz7BX0QPAgH
+https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwjevaCFhdngAhXCuo8KHbz7BX0QPAgH
+https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwjevaCFhdngAhXCuo8KHbz7BX0QPAgH
+https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwjevaCFhdngAhXCuo8KHbz7BX0QPAgH
+
+
+=========================================
+Load the URL'sdata to Hive stag table 
+=========================================
+
+hadoop fs -mkdir -p /user/Mano/datasets/hive/urls_data/sample_urls/
+
+hadoop fs -put ./Desktop/Mano/Hive/dataset/sample_url.url /user/Mano/datasets/hive/urls_data/sample_urls/
+
+CREATE DATABASE url_stage;
+
+CREATE EXTERNAL TABLE url_stage.urls_stage
+(
+line STRING
+)
+LOCATION "/user/Mano/datasets/hive/urls_data/sample_urls/"
+;
+
+=========================================
+Load into processing table using parse_url and parse_url_tuple
+=========================================
+
+CREATE DATABASE url_ods;
+
+CREATE TABLE url_ods.urls_ods
+(
+host STRING,
+path STRING,
+query STRING
+)
+ROW FORMAT
+DELIMITED FIELDS TERMINATED BY ","
+LINES TERMINATED BY "\n"
+;
+
+Using parse_url function
+==============================
+INSERT OVERWRITE TABLE url_ods.urls_ods
+SELECT 
+parse_url(line, 'HOST'), 
+parse_url(line, 'PATH'), 
+parse_url(line, 'QUERY')  
+from 
+url_stage.urls_stage;
+
+
+Select * from url_ods.urls_ods;
+
+
+Using parse_url_tuple() function
+=============================
+
+CREATE TABLE url_ods.urls_ods2
+(
+host STRING,
+path STRING,
+query STRING
+)
+ROW FORMAT
+DELIMITED FIELDS TERMINATED BY ","
+LINES TERMINATED BY "\n"
+;
+
+INSERT OVERWRITE TABLE url_ods.urls_ods2
+SELECT urls.* from 
+    > url_stage.urls_stage
+    > lateral view parse_url_tuple(line, 'HOST','PATH','QUERY') urls as host, path, query;
+
+
+Select * from url_ods.urls_ods2
+
+
+
+==============
+Final table 
+==============
+CREATE TABLE url_ods.urls_odS_final
+(
+host STRING,
+path ARRAY<STRING>,
+query MAP<STRING, STRING>
+)
+ROW FORMAT
+DELIMITED FIELDS TERMINATED BY ","
+COLLECTION ITEMS TERMINATED BY "&"
+MAP KEYS TERMINATED BY "="
+LINES TERMINATED BY "\n"
+;
+
+
+INSERT OVERWRITE TABLE url_ods.urls_odS_final
+SELECT 
+host,
+split(path, '/'),
+str_to_map(query, '&', '=')
+from url_ods.urls_ods;
+select host, path[1], query['hl'], query['sa'], query['ved'] from url_ods.urls_odS_final;
+
+========================================================================================
+Hive QL - HQL -UNION ALL
+========================================================================================
+Hive, only supports union all to merge multiple tables data
+
+Note:
+UNION ALL - allows duplicates 
+
+
+========================================================================================
+Hive QL - HQL - JOINS
+========================================================================================
+There two types of joins:
+i) Inner join - returns only matching records based on join criteria.
+ii) Outer join - returns matching and non matching records
+
+There are three types of Outer joins:
+i) Left outer join
+ii) Right outer join
+iii) Full outer join
+
+===========================================
+Hive Physical Data Modeling 
+===========================================
+Some of the pre-steps for physical data modeling,
+
+* File formats
+* Convert data types
+* Determine delimiter(Field and Line delimiter)
+* Determine formats for null values
+* Redundancy
+* Determine partitioning/bucketing strategy 
+* Too much partitioning vs too little partitioning
+========================================================================================
