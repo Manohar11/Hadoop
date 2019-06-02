@@ -1,0 +1,61 @@
+===================================================================================
+Azure Databricks
+===================================================================================
+Various file formats/sources:
+i)Connecting to SQL Databases using JDBC
+ii)CSV file
+iii)JSON file
+iv)Avro file
+v)Parquet file
+vi)ORC file
+
+===========================================================
+i)Connecting to SQL Databases using JDBC:
+===========================================================
+%scala
+
+import java.util.Properties
+
+//Connection parameters
+val driverClass = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+val username = "access_mano"
+val password = "grant_mano"
+
+//Connection string
+val jdbcHostname = "test"
+val jdbcPort = "12345"
+val jdbcDatabase = "test"
+val jdbcURL = s"jdbc:sqlserver://${jdbcHostname}:${jdbcPort};database=${jdbcDatabase}"
+
+val conProperties = new Properties()
+conProperties.setProperty("driver", driverClass)
+conProperties.put("user", s"${username}")
+conProperties.put("user", s"${password}")
+
+//Read data from JDBC
+======================
+val tableDF = spark.read.jdbc(jdbcURL, "table1", conProperties)
+tableDF.printSchema
+tableDF.show()
+
+//Write data to JDBC server
+=======================
+import org.apache.spark.sql.SaveMode
+//Append the data to the existing table
+tableDF.write.mode(SaveMode.Append).jdbc(jdbcURL, "table1", conProperties)
+
+Note:
+SaveModes - Append, Overwrite, Ignore, ErrorIfExists
+===========================================================
+ii)CSV File:
+===========================================================
+//Read CSV File
+======================
+Read CSV file options:
+* delimiter - default (,) comma
+* inferScehma - default false
+
+Official link: <a href = "https://docs.azuredatabricks.net/spark/latest/data-sources/read-csv.html#reading-files"> More details </a>
+
+val CSVdf = spark.read.format("csv").option("delimiter", "|").option("inferScehma", "true").load(CSVPath)
+
